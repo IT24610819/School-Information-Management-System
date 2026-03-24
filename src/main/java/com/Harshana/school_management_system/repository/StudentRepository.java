@@ -1,10 +1,10 @@
 package com.Harshana.school_management_system.repository;
 
 import com.Harshana.school_management_system.entity.Student;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-
-import java.util.List;
 
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
@@ -12,16 +12,12 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     boolean existsByAdmissionNoAndStudentIdNot(String admissionNo, Long studentId);
 
-    List<Student> findByAdmissionNoContainingIgnoreCase(String admissionNo);
+    Page<Student> findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseOrderByAdmissionNoAsc(
+            String admissionNo, String fullName, Pageable pageable
+    );
 
-    List<Student> findByFullNameContainingIgnoreCase(String fullName);
-
-    List<Student> findByClassRoom_ClassId(Long classId);
-
-    List<Student> findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCase(String admissionNo, String fullName);
-
-    List<Student> findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassId(
-            String admissionNo, String fullName, Long classId
+    Page<Student> findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassIdOrderByAdmissionNoAsc(
+            String admissionNo, String fullName, Long classId, Pageable pageable
     );
 
     long countByStatus(String status);
@@ -32,5 +28,5 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
            GROUP BY s.classRoom.className
            ORDER BY s.classRoom.className
            """)
-    List<Object[]> countStudentsGroupByClass();
+    java.util.List<Object[]> countStudentsGroupByClass();
 }

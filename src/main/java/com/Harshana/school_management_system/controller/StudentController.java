@@ -6,12 +6,16 @@ import com.Harshana.school_management_system.repository.ClassRoomRepository;
 import com.Harshana.school_management_system.repository.StudentRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -47,18 +51,23 @@ public class StudentController {
             @RequestParam(value = "admissionNo", required = false) String admissionNo,
             @RequestParam(value = "fullName", required = false) String fullName,
             @RequestParam(value = "classId", required = false) Long classId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
             Model model) {
 
         String admissionNoValue = admissionNo == null ? "" : admissionNo.trim();
         String fullNameValue = fullName == null ? "" : fullName.trim();
 
-        List<Student> students = getFilteredStudents(admissionNoValue, fullNameValue, classId);
+        Pageable pageable = PageRequest.of(page, 5);
+        Page<Student> studentPage = getFilteredStudents(admissionNoValue, fullNameValue, classId, pageable);
 
-        model.addAttribute("students", students);
+        model.addAttribute("studentPage", studentPage);
+        model.addAttribute("students", studentPage.getContent());
         model.addAttribute("classes", classRoomRepository.findAll());
         model.addAttribute("admissionNo", admissionNoValue);
         model.addAttribute("fullName", fullNameValue);
         model.addAttribute("selectedClassId", classId);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", studentPage.getTotalPages());
 
         model.addAttribute("totalStudents", studentRepository.count());
         model.addAttribute("activeStudents", studentRepository.countByStatus("Active"));
@@ -79,7 +88,7 @@ public class StudentController {
         String admissionNoValue = admissionNo == null ? "" : admissionNo.trim();
         String fullNameValue = fullName == null ? "" : fullName.trim();
 
-        List<Student> students = getFilteredStudents(admissionNoValue, fullNameValue, classId);
+        List<Student> students = getFilteredStudentsForExport(admissionNoValue, fullNameValue, classId);
 
         response.setContentType("text/csv");
         response.setCharacterEncoding("UTF-8");
@@ -121,7 +130,8 @@ public class StudentController {
                               BindingResult bindingResult,
                               @RequestParam("classId") Long classId,
                               @RequestParam("photoFile") MultipartFile photoFile,
-                              Model model) {
+                              Model model,
+                              RedirectAttributes redirectAttributes) {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("classes", classRoomRepository.findAll());
@@ -149,6 +159,7 @@ public class StudentController {
         }
 
         studentRepository.save(student);
+        redirectAttributes.addFlashAttribute("success", "Student added successfully!");
         return "redirect:/students";
     }
 
@@ -171,7 +182,8 @@ public class StudentController {
                                 BindingResult bindingResult,
                                 @RequestParam("classId") Long classId,
                                 @RequestParam("photoFile") MultipartFile photoFile,
-                                Model model) {
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
 
         student.setStudentId(id);
 
@@ -215,6 +227,7 @@ public class StudentController {
         }
 
         studentRepository.save(student);
+        redirectAttributes.addFlashAttribute("success", "Student updated successfully!");
         return "redirect:/students";
     }
 
@@ -231,42 +244,58 @@ public class StudentController {
     }
 
     @GetMapping("/students/deactivate/{id}")
-    public String deactivateStudent(@PathVariable("id") Long id) {
+    public String deactivateStudent(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
 
         if (optionalStudent.isPresent()) {
             Student student = optionalStudent.get();
             student.setStatus("Inactive");
             studentRepository.save(student);
+            redirectAttributes.addFlashAttribute("success", "Student deactivated successfully!");
         }
 
         return "redirect:/students";
     }
 
     @GetMapping("/students/activate/{id}")
-    public String activateStudent(@PathVariable("id") Long id) {
+    public String activateStudent(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
 
         if (optionalStudent.isPresent()) {
             Student student = optionalStudent.get();
             student.setStatus("Active");
             studentRepository.save(student);
+            redirectAttributes.addFlashAttribute("success", "Student activated successfully!");
         }
 
         return "redirect:/students";
     }
 
-    private List<Student> getFilteredStudents(String admissionNo, String fullName, Long classId) {
+    private Page<Student> getFilteredStudents(String admissionNo, String fullName, Long classId, Pageable pageable) {
         if (classId != null) {
             return studentRepository
-                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassId(
-                            admissionNo, fullName, classId
+                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassIdOrderByAdmissionNoAsc(
+                            admissionNo, fullName, classId, pageable
                     );
         } else {
             return studentRepository
-                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCase(
-                            admissionNo, fullName
+                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseOrderByAdmissionNoAsc(
+                            admissionNo, fullName, pageable
                     );
+        }
+    }
+
+    private List<Student> getFilteredStudentsForExport(String admissionNo, String fullName, Long classId) {
+        if (classId != null) {
+            return studentRepository
+                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassIdOrderByAdmissionNoAsc(
+                            admissionNo, fullName, classId, Pageable.unpaged()
+                    ).getContent();
+        } else {
+            return studentRepository
+                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseOrderByAdmissionNoAsc(
+                            admissionNo, fullName, Pageable.unpaged()
+                    ).getContent();
         }
     }
 
