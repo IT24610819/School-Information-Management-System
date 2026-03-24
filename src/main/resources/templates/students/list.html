@@ -11,7 +11,7 @@
 <div class="container py-4">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">Student Information Management - Day 12</h3>
+            <h3 class="mb-0">Student Information Management </h3>
         </div>
 
         <div class="card-body">
@@ -65,7 +65,7 @@
                 <h5 class="mb-0">Student List</h5>
 
                 <div class="d-flex gap-2">
-                    <a th:href="@{/students/export(admissionNo=${admissionNo}, fullName=${fullName}, classId=${selectedClassId})}"
+                    <a th:href="@{/students/export(admissionNo=${admissionNo}, fullName=${fullName}, classId=${selectedClassId}, status=${selectedStatus})}"
                        class="btn btn-outline-primary">
                         Export CSV
                     </a>
@@ -102,6 +102,16 @@
                     </select>
                 </div>
 
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">-- All Statuses --</option>
+                        <option value="Active" th:selected="${selectedStatus == 'Active'}">Active</option>
+                        <option value="Inactive" th:selected="${selectedStatus == 'Inactive'}">Inactive</option>
+                        <option value="Transferred" th:selected="${selectedStatus == 'Transferred'}">Transferred</option>
+                    </select>
+                </div>
+
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">Search</button>
                     <a href="/students" class="btn btn-secondary">Clear</a>
@@ -133,11 +143,13 @@
                                  class="rounded-circle border"
                                  style="width: 50px; height: 50px; object-fit: cover;">
 
-                            <img th:if="${student.photoPath == null}"
-                                 th:src="@{/images/default-student.png}"
-                                 alt="Default Photo"
-                                 class="rounded-circle border"
-                                 style="width: 50px; height: 50px; object-fit: cover;">
+                            <div th:if="${student.photoPath == null}">
+                                <img th:src="@{/images/default_student.png}"
+                                     alt="Default Photo"
+                                     class="rounded-circle border"
+                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                <small class="text-muted d-block">No Photo</small>
+                            </div>
                         </td>
 
                         <td th:text="${student.admissionNo}"></td>
@@ -193,7 +205,7 @@
 
                     <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
                         <a class="page-link"
-                           th:href="@{/students(page=${currentPage - 1}, admissionNo=${admissionNo}, fullName=${fullName}, classId=${selectedClassId})}">
+                           th:href="@{/students(page=${currentPage - 1}, admissionNo=${admissionNo}, fullName=${fullName}, classId=${selectedClassId}, status=${selectedStatus})}">
                             Previous
                         </a>
                     </li>
@@ -202,14 +214,14 @@
                         th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                         th:classappend="${i == currentPage} ? 'active'">
                         <a class="page-link"
-                           th:href="@{/students(page=${i}, admissionNo=${admissionNo}, fullName=${fullName}, classId=${selectedClassId})}"
+                           th:href="@{/students(page=${i}, admissionNo=${admissionNo}, fullName=${fullName}, classId=${selectedClassId}, status=${selectedStatus})}"
                            th:text="${i + 1}">
                         </a>
                     </li>
 
                     <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
                         <a class="page-link"
-                           th:href="@{/students(page=${currentPage + 1}, admissionNo=${admissionNo}, fullName=${fullName}, classId=${selectedClassId})}">
+                           th:href="@{/students(page=${currentPage + 1}, admissionNo=${admissionNo}, fullName=${fullName}, classId=${selectedClassId}, status=${selectedStatus})}">
                             Next
                         </a>
                     </li>

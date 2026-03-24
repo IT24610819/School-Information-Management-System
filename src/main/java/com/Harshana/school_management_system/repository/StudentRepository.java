@@ -12,12 +12,12 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     boolean existsByAdmissionNoAndStudentIdNot(String admissionNo, Long studentId);
 
-    Page<Student> findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseOrderByAdmissionNoAsc(
-            String admissionNo, String fullName, Pageable pageable
+    Page<Student> findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndStatusContainingIgnoreCaseOrderByAdmissionNoAsc(
+            String admissionNo, String fullName, String status, Pageable pageable
     );
 
-    Page<Student> findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassIdOrderByAdmissionNoAsc(
-            String admissionNo, String fullName, Long classId, Pageable pageable
+    Page<Student> findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassIdAndStatusContainingIgnoreCaseOrderByAdmissionNoAsc(
+            String admissionNo, String fullName, Long classId, String status, Pageable pageable
     );
 
     long countByStatus(String status);

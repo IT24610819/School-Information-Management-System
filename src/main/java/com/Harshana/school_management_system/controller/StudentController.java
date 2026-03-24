@@ -51,14 +51,16 @@ public class StudentController {
             @RequestParam(value = "admissionNo", required = false) String admissionNo,
             @RequestParam(value = "fullName", required = false) String fullName,
             @RequestParam(value = "classId", required = false) Long classId,
+            @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "page", defaultValue = "0") int page,
             Model model) {
 
         String admissionNoValue = admissionNo == null ? "" : admissionNo.trim();
         String fullNameValue = fullName == null ? "" : fullName.trim();
+        String statusValue = status == null ? "" : status.trim();
 
         Pageable pageable = PageRequest.of(page, 5);
-        Page<Student> studentPage = getFilteredStudents(admissionNoValue, fullNameValue, classId, pageable);
+        Page<Student> studentPage = getFilteredStudents(admissionNoValue, fullNameValue, classId, statusValue, pageable);
 
         model.addAttribute("studentPage", studentPage);
         model.addAttribute("students", studentPage.getContent());
@@ -66,6 +68,7 @@ public class StudentController {
         model.addAttribute("admissionNo", admissionNoValue);
         model.addAttribute("fullName", fullNameValue);
         model.addAttribute("selectedClassId", classId);
+        model.addAttribute("selectedStatus", statusValue);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", studentPage.getTotalPages());
 
@@ -83,12 +86,14 @@ public class StudentController {
             @RequestParam(value = "admissionNo", required = false) String admissionNo,
             @RequestParam(value = "fullName", required = false) String fullName,
             @RequestParam(value = "classId", required = false) Long classId,
+            @RequestParam(value = "status", required = false) String status,
             HttpServletResponse response) throws IOException {
 
         String admissionNoValue = admissionNo == null ? "" : admissionNo.trim();
         String fullNameValue = fullName == null ? "" : fullName.trim();
+        String statusValue = status == null ? "" : status.trim();
 
-        List<Student> students = getFilteredStudentsForExport(admissionNoValue, fullNameValue, classId);
+        List<Student> students = getFilteredStudentsForExport(admissionNoValue, fullNameValue, classId, statusValue);
 
         response.setContentType("text/csv");
         response.setCharacterEncoding("UTF-8");
@@ -271,30 +276,30 @@ public class StudentController {
         return "redirect:/students";
     }
 
-    private Page<Student> getFilteredStudents(String admissionNo, String fullName, Long classId, Pageable pageable) {
+    private Page<Student> getFilteredStudents(String admissionNo, String fullName, Long classId, String status, Pageable pageable) {
         if (classId != null) {
             return studentRepository
-                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassIdOrderByAdmissionNoAsc(
-                            admissionNo, fullName, classId, pageable
+                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassIdAndStatusContainingIgnoreCaseOrderByAdmissionNoAsc(
+                            admissionNo, fullName, classId, status, pageable
                     );
         } else {
             return studentRepository
-                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseOrderByAdmissionNoAsc(
-                            admissionNo, fullName, pageable
+                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndStatusContainingIgnoreCaseOrderByAdmissionNoAsc(
+                            admissionNo, fullName, status, pageable
                     );
         }
     }
 
-    private List<Student> getFilteredStudentsForExport(String admissionNo, String fullName, Long classId) {
+    private List<Student> getFilteredStudentsForExport(String admissionNo, String fullName, Long classId, String status) {
         if (classId != null) {
             return studentRepository
-                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassIdOrderByAdmissionNoAsc(
-                            admissionNo, fullName, classId, Pageable.unpaged()
+                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndClassRoom_ClassIdAndStatusContainingIgnoreCaseOrderByAdmissionNoAsc(
+                            admissionNo, fullName, classId, status, Pageable.unpaged()
                     ).getContent();
         } else {
             return studentRepository
-                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseOrderByAdmissionNoAsc(
-                            admissionNo, fullName, Pageable.unpaged()
+                    .findByAdmissionNoContainingIgnoreCaseAndFullNameContainingIgnoreCaseAndStatusContainingIgnoreCaseOrderByAdmissionNoAsc(
+                            admissionNo, fullName, status, Pageable.unpaged()
                     ).getContent();
         }
     }
